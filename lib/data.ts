@@ -19,7 +19,7 @@ export function generateId(): string {
 }
 
 export function generateSlug(title: string, existingPosts: Post[]): string {
-  let slug = title
+  const slug = title
     .toLowerCase()
     .trim()
     .replace(/[^\w\s-]/g, "")
@@ -46,7 +46,7 @@ const threeDaysAgo = new Date(Date.now() - 259200000).toISOString();
 const fourDaysAgo = new Date(Date.now() - 345600000).toISOString();
 const fiveDaysAgo = new Date(Date.now() - 432000000).toISOString();
 
-let posts: Post[] = [
+const posts: Post[] = [
   {
     id: "post-1",
     title: "Getting Started with Next.js 14 App Router",
@@ -144,7 +144,7 @@ let posts: Post[] = [
   },
 ];
 
-let comments: Comment[] = [
+const comments: Comment[] = [
   {
     id: "comment-1",
     postId: "post-1",
@@ -219,59 +219,109 @@ let comments: Comment[] = [
   },
 ];
 
-export function getPosts(): Post[] {
-  return [...posts];
+const BUCKET_URL = "https://kvdb.io/DHpqAktXZD1sVvpRutt2Yk";
+
+async function fetchFromKV<T>(key: string, defaultValue: T): Promise<T> {
+  try {
+    const res = await fetch(`${BUCKET_URL}/${key}`, { cache: "no-store" });
+    if (!res.ok) {
+      await saveToKV(key, defaultValue);
+      return defaultValue;
+    }
+    const text = await res.text();
+    if (!text || text.trim() === "") return defaultValue;
+    return JSON.parse(text) as T;
+  } catch (error) {
+    console.error(`Error reading ${key} from KV:`, error);
+    return defaultValue;
+  }
 }
 
-export function getPostById(id: string): Post | undefined {
-  return posts.find((p) => p.id === id);
+async function saveToKV<T>(key: string, value: T): Promise<void> {
+  try {
+    await fetch(`${BUCKET_URL}/${key}`, {
+      method: "POST",
+      body: JSON.stringify(value),
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+    });
+  } catch (error) {
+    console.error(`Error writing ${key} to KV:`, error);
+  }
 }
 
-export function getPostBySlug(slug: string): Post | undefined {
-  return posts.find((p) => p.slug === slug);
+export async function getPosts(): Promise<Post[]> {
+  return fetchFromKV<Post[]>("posts", posts);
 }
 
-export function addPost(post: Post): void {
-  posts.push(post);
+export async function getPostById(id: string): Promise<Post | undefined> {
+  const allPosts = await getPosts();
+  return allPosts.find((p) => p.id === id);
 }
 
-export function updatePost(id: string, updates: Partial<Post>): Post | undefined {
-  const index = posts.findIndex((p) => p.id === id);
+export async function getPostBySlug(slug: string): Promise<Post | undefined> {
+  const allPosts = await getPosts();
+  return allPosts.find((p) => p.slug === slug);
+}
+
+export async function addPost(post: Post): Promise<void> {
+  const allPosts = await getPosts();
+  allPosts.push(post);
+  await saveToKV("posts", allPosts);
+}
+
+export async function updatePost(id: string, updates: Partial<Post>): Promise<Post | undefined> {
+  const allPosts = await getPosts();
+  const index = allPosts.findIndex((p) => p.id === id);
   if (index === -1) return undefined;
-  posts[index] = { ...posts[index], ...updates };
-  return posts[index];
+  allPosts[index] = { ...allPosts[index], ...updates };
+  await saveToKV("posts", allPosts);
+  return allPosts[index];
 }
 
-export function deletePost(id: string): boolean {
-  const index = posts.findIndex((p) => p.id === id);
+export async function deletePost(id: string): Promise<boolean> {
+  const allPosts = await getPosts();
+  const index = allPosts.findIndex((p) => p.id === id);
   if (index === -1) return false;
-  posts.splice(index, 1);
-  comments = comments.filter((c) => c.postId !== id);
+  allPosts.splice(index, 1);
+  await saveToKV("posts", allPosts);
+
+  // Filter out comments associated with this post
+  const allComments = await getComments();
+  const remainingComments = allComments.filter((c) => c.postId !== id);
+  await saveToKV("comments", remainingComments);
   return true;
 }
 
-export function getComments(): Comment[] {
-  return [...comments];
+export async function getComments(): Promise<Comment[]> {
+  return fetchFromKV<Comment[]>("comments", comments);
 }
 
-export function getCommentById(id: string): Comment | undefined {
-  return comments.find((c) => c.id === id);
+export async function getCommentById(id: string): Promise<Comment | undefined> {
+  const allComments = await getComments();
+  return allComments.find((c) => c.id === id);
 }
 
-export function addComment(comment: Comment): void {
-  comments.push(comment);
+export async function addComment(comment: Comment): Promise<void> {
+  const allComments = await getComments();
+  allComments.push(comment);
+  await saveToKV("comments", allComments);
 }
 
-export function updateComment(id: string, updates: Partial<Comment>): Comment | undefined {
-  const index = comments.findIndex((c) => c.id === id);
+export async function updateComment(id: string, updates: Partial<Comment>): Promise<Comment | undefined> {
+  const allComments = await getComments();
+  const index = allComments.findIndex((c) => c.id === id);
   if (index === -1) return undefined;
-  comments[index] = { ...comments[index], ...updates };
-  return comments[index];
+  allComments[index] = { ...allComments[index], ...updates };
+  await saveToKV("comments", allComments);
+  return allComments[index];
 }
 
-export function deleteComment(id: string): boolean {
-  const index = comments.findIndex((c) => c.id === id);
+export async function deleteComment(id: string): Promise<boolean> {
+  const allComments = await getComments();
+  const index = allComments.findIndex((c) => c.id === id);
   if (index === -1) return false;
-  comments.splice(index, 1);
+  allComments.splice(index, 1);
+  await saveToKV("comments", allComments);
   return true;
 }

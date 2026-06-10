@@ -1,10 +1,12 @@
-import { Post, PostCategory } from "@/types/blog";
+import type { Post, PostCategory } from "@/types/blog";
 import PostCard from "@/components/PostCard";
 import CategoryBadge from "@/components/CategoryBadge";
 import LoginPrompt from "@/components/LoginPrompt";
 import Link from "next/link";
 
 import { getPosts } from "@/lib/data";
+
+export const dynamic = "force-dynamic";
 
 const categories: PostCategory[] = [
   "technology",
@@ -25,7 +27,7 @@ export default async function HomePage({
   const categoryFilter = params.category || "";
   const error = params.error || "";
 
-  let posts = getPosts()
+  let posts = (await getPosts())
     .filter((p) => p.status === "published")
     .sort((a, b) => {
       const dateA = a.publishedAt || a.createdAt;

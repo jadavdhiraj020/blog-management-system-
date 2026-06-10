@@ -37,6 +37,7 @@ export function AuthorProvider({ children }: { children: ReactNode }) {
     if (storedAuthorId) {
       const found = authors.find((a) => a.id === storedAuthorId);
       if (found) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentAuthorState(found);
         document.cookie = `blog_author=${found.id}; path=/; max-age=31536000; SameSite=Lax`;
       }

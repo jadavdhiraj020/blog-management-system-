@@ -10,16 +10,16 @@ export async function GET(
   const { searchParams } = new URL(request.url);
   const track = searchParams.get("track");
 
-  const post = getPostById(id);
+  const post = await getPostById(id);
   if (!post) {
     return NextResponse.json({ error: "Post not found" }, { status: 404 });
   }
 
   if (track === "true") {
-    updatePost(id, { viewCount: post.viewCount + 1 });
+    await updatePost(id, { viewCount: post.viewCount + 1 });
   }
 
-  const updated = getPostById(id);
+  const updated = await getPostById(id);
   return NextResponse.json(updated);
 }
 
@@ -28,7 +28,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const post = getPostById(id);
+  const post = await getPostById(id);
   if (!post) {
     return NextResponse.json({ error: "Post not found" }, { status: 404 });
   }
@@ -55,7 +55,7 @@ export async function PUT(
 
   updates.updatedAt = new Date().toISOString();
 
-  const updated = updatePost(id, updates);
+  const updated = await updatePost(id, updates);
 
   revalidatePath("/");
   revalidatePath(`/blog/${post.slug}`);
@@ -70,7 +70,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const post = getPostById(id);
+  const post = await getPostById(id);
   if (!post) {
     return NextResponse.json({ error: "Post not found" }, { status: 404 });
   }
@@ -80,7 +80,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  const success = deletePost(id);
+  const success = await deletePost(id);
   if (!success) {
     return NextResponse.json({ error: "Post not found" }, { status: 404 });
   }

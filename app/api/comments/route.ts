@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   const postId = searchParams.get("postId");
   const approved = searchParams.get("approved");
 
-  let result = getComments();
+  let result = await getComments();
 
   if (postId) {
     result = result.filter((c) => c.postId === postId);
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
   const { postId, authorName, authorEmail, content } = body;
 
-  if (!postId || !getPostById(postId)) {
+  if (!postId || !(await getPostById(postId))) {
     return NextResponse.json(
       { error: "Post not found" },
       { status: 400 }
@@ -63,11 +63,11 @@ export async function POST(request: NextRequest) {
     createdAt: new Date().toISOString(),
   };
 
-  addComment(newComment);
+  await addComment(newComment);
   revalidatePath("/");
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/comments");
-  const post = getPostById(postId);
+  const post = await getPostById(postId);
   if (post) {
     revalidatePath(`/blog/${post.slug}`);
   }

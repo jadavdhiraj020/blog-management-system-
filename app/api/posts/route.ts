@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   const authorId = searchParams.get("authorId");
   const slug = searchParams.get("slug");
 
-  let posts = getPosts();
+  let posts = await getPosts();
 
   if (slug) {
     const post = posts.find((p) => p.slug === slug);
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
   const newPost = {
     id: generateId(),
     title,
-    slug: generateSlug(title, getPosts()),
+    slug: generateSlug(title, await getPosts()),
     excerpt,
     content,
     category,
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
     updatedAt: now,
   };
 
-  addPost(newPost);
+  await addPost(newPost);
   revalidatePath("/");
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/posts");

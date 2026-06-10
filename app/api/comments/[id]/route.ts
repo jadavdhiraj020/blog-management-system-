@@ -7,18 +7,18 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const comment = getCommentById(id);
+  const comment = await getCommentById(id);
   if (!comment) {
     return NextResponse.json({ error: "Comment not found" }, { status: 404 });
   }
 
   const body = await request.json();
-  const updated = updateComment(id, { approved: Boolean(body.approved) });
+  const updated = await updateComment(id, { approved: Boolean(body.approved) });
 
   revalidatePath("/");
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/comments");
-  const post = getPostById(comment.postId);
+  const post = await getPostById(comment.postId);
   if (post) {
     revalidatePath(`/blog/${post.slug}`);
   }
@@ -31,12 +31,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const comment = getCommentById(id);
+  const comment = await getCommentById(id);
   if (!comment) {
     return NextResponse.json({ error: "Comment not found" }, { status: 404 });
   }
 
-  const success = deleteComment(id);
+  const success = await deleteComment(id);
   if (!success) {
     return NextResponse.json({ error: "Comment not found" }, { status: 404 });
   }
@@ -44,7 +44,7 @@ export async function DELETE(
   revalidatePath("/");
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/comments");
-  const post = getPostById(comment.postId);
+  const post = await getPostById(comment.postId);
   if (post) {
     revalidatePath(`/blog/${post.slug}`);
   }

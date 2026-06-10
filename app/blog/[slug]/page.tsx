@@ -1,10 +1,12 @@
-import { Post, Comment } from "@/types/blog";
+import type { Post, Comment } from "@/types/blog";
 import { getAuthorById } from "@/lib/authors";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import CategoryBadge from "@/components/CategoryBadge";
 import CommentSection from "@/components/CommentSection";
 import { notFound } from "next/navigation";
+
+export const dynamic = "force-dynamic";
 
 function formatDate(dateString?: string): string {
   if (!dateString) return "";
@@ -24,16 +26,16 @@ export default async function BlogPostPage({
 }) {
   const { slug } = await params;
 
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlug(slug);
 
   if (!post || post.status !== "published") {
     notFound();
   }
 
   // Increment view count
-  updatePost(post.id, { viewCount: post.viewCount + 1 });
+  await updatePost(post.id, { viewCount: post.viewCount + 1 });
 
-  const comments = getComments().filter(
+  const comments = (await getComments()).filter(
     (c) => c.postId === post.id && c.approved === true
   );
 
