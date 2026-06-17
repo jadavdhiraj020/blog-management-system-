@@ -27,7 +27,6 @@ export default function EditPostPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const dispatch = useDispatch<AppDispatch>();
   const { currentAuthor } = useAuthor();
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);

@@ -1,4 +1,4 @@
-import type { Post, PostCategory } from "@/types/blog";
+import type { PostCategory } from "@/types/blog";
 import PostCard from "@/components/PostCard";
 import CategoryBadge from "@/components/CategoryBadge";
 import LoginPrompt from "@/components/LoginPrompt";

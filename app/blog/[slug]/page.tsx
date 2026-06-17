@@ -1,4 +1,3 @@
-import type { Post, Comment } from "@/types/blog";
 import { getAuthorById } from "@/lib/authors";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";

@@ -1,4 +1,3 @@
-import type { Post, Comment } from "@/types/blog";
 import DashboardStatsView from "@/components/DashboardStatsView";
 import { getPosts, getComments } from "@/lib/data";
 

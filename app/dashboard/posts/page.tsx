@@ -1,4 +1,3 @@
-import type { Post } from "@/types/blog";
 import DashboardPostsList from "@/components/DashboardPostsList";
 import { getPosts } from "@/lib/data";
 
